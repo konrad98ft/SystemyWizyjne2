@@ -6,6 +6,13 @@
 
 
 #if STEP==8
+struct SDaneObrazy
+{
+	cv::Mat imgIn, imgOut;
+
+};
+
+
 inline double dystans(cv::Vec3b p1, cv::Vec3b p2)
 {
 	return cv::norm(cv::Scalar(p1) - cv::Scalar(p2));
@@ -15,17 +22,20 @@ void onMouse(int event, int x, int y, int flags, void* userdata) //przyk�ad ak
 {
 	if (event == cv::EVENT_LBUTTONDOWN)
 	{
-		cv::Mat* pimg = (cv::Mat*)userdata;
+		SDaneObrazy* param = (SDaneObrazy*)userdata;
+		param->imgOut = param->imgIn.clone();
+		cv::Mat* pimg = (cv::Mat*)param;
+
 		std::cout << pimg->at<cv::Vec3b>(y, x) << std::endl;
-		cv::Mat_<cv::Vec3b> tmp(*pimg);
+		cv::Mat_<cv::Vec3b> tmp(param->imgOut);
 		cv::Vec3b& clicked_p = tmp(y, x);
-		
+
 		for (int y = 0; y < tmp.rows; ++y)
 		{
 			for (int x = 0; x < tmp.cols; ++x)
 			{
 				cv::Vec3b& p = tmp(y, x);
-				if (dystans(p, clicked_p)<20)
+				if (dystans(p, clicked_p) < 20)
 				{
 					p[0] = 255;
 					p[1] = 0;
@@ -33,7 +43,7 @@ void onMouse(int event, int x, int y, int flags, void* userdata) //przyk�ad ak
 				}
 			}
 		}
-		cv::imshow("Test", *pimg);
+		cv::imshow("Test", param->imgOut);
 	}
 }
 
@@ -138,12 +148,12 @@ int main()
 	cv::waitKey();
 #if STEP==4
 	cv::destroyAllWindows(); //zamykamy poprzednie okna
-	cv::circle(wektorImg[2], cv::Point(loadedImg.rows/2, loadedImg.cols/2), 50, 255, -1); //warto�� -1 w argumencie thickness oznacza okr�g wype�niony
+	cv::circle(wektorImg[2], cv::Point(loadedImg.rows / 2, loadedImg.cols / 2), 50, 255, -1); //warto�� -1 w argumencie thickness oznacza okr�g wype�niony
 	cv::Mat outImg;
 	cv::Mat swap;
 	swap = wektorImg[0];
-	wektorImg[0]= wektorImg[1];
-	wektorImg[1]= swap;
+	wektorImg[0] = wektorImg[1];
+	wektorImg[1] = swap;
 	cv::imshow("Kanal B", wektorImg[0]);
 	cv::imshow("Kanal G", wektorImg[1]);
 	cv::imshow("Kanal R", wektorImg[2]);
@@ -165,7 +175,8 @@ int main()
 #if STEP==8
 	cv::Mat loadedImg = cv::imread(IMG_PATH);
 	cv::imshow("Test", loadedImg);
-	cv::setMouseCallback("Test", onMouse, &loadedImg);
+	SDaneObrazy param = { loadedImg, loadedImg.clone()};
+	cv::setMouseCallback("Test", onMouse, &param);
 	cv::waitKey();
 #endif
 
